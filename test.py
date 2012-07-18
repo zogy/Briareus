@@ -14,8 +14,12 @@ def g(x):
 def dot(f, g):
 	return lambda x: f(g(x))
 
-if __name__ == '__main__':
-	c = worker.Caller("ipc://clientend")
-	print c.eval(f, 10)
-	c.shutdown()
+def test(*args):
+		c = worker.Caller("ipc://clientend")
+		print c.eval(*args)
+		c.shutdown()
 
+if __name__ == '__main__':
+	import gevent
+	jobs = [gevent.spawn(test, time.sleep, i) for i in range(10)]
+	gevent.joinall(jobs)

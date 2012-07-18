@@ -33,4 +33,4 @@ if __name__ == '__main__':
 	from sys import argv, exit
 	if len(argv) != 2:
 		exit('Usage: %s address\nYou should ALWAYS use a script to launch workers.' % __file__)
-	netable.Netable(Worker).run(argv[1], False)
+	netable.Netable(Worker).run(argv[1])

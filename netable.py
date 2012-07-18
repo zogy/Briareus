@@ -1,4 +1,4 @@
-import zmq
+from gevent_zeromq import zmq
 import ujson as serlib
 import snappy
 
@@ -16,19 +16,17 @@ class Netable(object):
     def __init__(self, C):
         self.instance = C()
 
-    def run(self, address, standalone=True):
-        if standalone:
-            self.sock = context.socket(zmq.REP)
-            self.sock.bind(address)
-        else:
-            self.sock = context.socket(zmq.REQ)
-            self.sock.connect(address)
-            self.sock.send(LRU_READY)
+    def run(self, address):
+        self.sock = context.socket(zmq.DEALER)
+        self.sock.connect(address)
         while True:
             msg = self.sock.recv_multipart()
-            ret = self.handle(loads(msg[2]))
-            print ret
-            self.sock.send_multipart(msg[:2]+[dumps(ret)])
+            self.sock.close()
+            request = loads(msg[2])
+            ret = self.handle(request)
+            self.sock = context.socket(zmq.DEALER)
+            self.sock.connect(address)
+            self.sock.send_multipart(msg[:2] + [dumps(ret)])
 
     def handle(self, message):
         func, args = message
@@ -50,10 +48,3 @@ class Client(object):
 
     def shutdown(self):
         self.sock.close()
-
-if __name__ == '__main__':
-    class Test(object):
-        def add(self, a, b):
-            return a + b
-
-    Netable(Test)
